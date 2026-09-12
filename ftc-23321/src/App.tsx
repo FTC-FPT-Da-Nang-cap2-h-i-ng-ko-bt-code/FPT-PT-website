@@ -9,6 +9,10 @@ import moment2 from "./assets/moment2.jpg";
 import moment3 from "./assets/moment3.jpg";
 import moment4 from "./assets/moment4.jpg";
 
+import AdminLogin from "./pages/AdminLogin";
+import Admin from "./pages/Admin";
+import CreatePost from "./pages/admin/CreatePost";
+
 type GitHubRepo = {
   name: string;
   html_url: string;
@@ -25,9 +29,49 @@ const EXCLUDED_REPOS = [
   "WebCreatePathing",
 ];
 
+const repoLinks = [
+  "https://github.com/BillyVNYT/FTC23321-2024-2025"
+];
+
 function ProgrammePage() {
   const [repos, setRepos] = useState<GitHubRepo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [repositories, setRepositories] = useState<any[]>([]);
+
+  useEffect(() => {
+    const loadRepositories = async () => {
+      const results = await Promise.all(
+        repoLinks.map(async (url) => {
+          const match = url.match(
+            /^https?:\/\/github\.com\/([^/]+)\/([^/#?]+)/
+          );
+
+          if (!match) return null;
+
+          const owner = match[1];
+          const repo = match[2];
+
+          try {
+            const response = await fetch(
+              `https://api.github.com/repos/${owner}/${repo}`
+            );
+
+            if (!response.ok) return null;
+
+            return await response.json();
+          } catch {
+            return null;
+          }
+        })
+      );
+
+      setRepositories(
+        results.filter((repo) => repo !== null)
+      );
+    };
+
+    loadRepositories();
+  }, []);
 
   useEffect(() => {
     fetch(
@@ -112,6 +156,36 @@ function ProgrammePage() {
               </span>
             </a>
           ))}
+          {repositories.map((repo) => (
+            <a
+              key={repo.html_url}
+              href={repo.html_url}
+              target="_blank"
+              rel="noreferrer"
+              className="resource-card"
+            >
+              <div className="resource-card-top">
+                <span>
+                  {repo.language || "SOURCE CODE"}
+                </span>
+
+                <span>
+                  ★ {repo.stargazers_count}
+                </span>
+              </div>
+
+              <h3>{repo.name}</h3>
+
+              <p>
+                {repo.description ||
+                  "Programming resource for FTC Robotics."}
+              </p>
+
+              <div className="resource-link">
+                VIEW SOURCE →
+              </div>
+            </a>
+          ))}
         </div>
       )}
     </section>
@@ -174,6 +248,21 @@ function App() {
       window.removeEventListener("hashchange", handleHash);
     };
   }, []);
+
+  const path = window.location.pathname;
+
+  // Trang login
+  if (path === "/admin/login") {
+    return <AdminLogin />;
+  }
+
+  // Trang admin
+  if (path === "/admin") {
+    return <Admin />;
+  }
+  if (path === "/admin/posts/create") {
+    return <CreatePost />;
+  }
 
   if (resourcePage === "programme") {
     return (
