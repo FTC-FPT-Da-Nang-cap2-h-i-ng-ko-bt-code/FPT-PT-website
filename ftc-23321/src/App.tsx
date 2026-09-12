@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import "./style.css";
 
 import team23321 from "./assets/Team23321.jpg";
@@ -8,7 +9,252 @@ import moment2 from "./assets/moment2.jpg";
 import moment3 from "./assets/moment3.jpg";
 import moment4 from "./assets/moment4.jpg";
 
+type GitHubRepo = {
+  name: string;
+  html_url: string;
+  description: string | null;
+  language: string | null;
+  stargazers_count: number;
+};
+
+const GITHUB_ORG =
+  "FTC-FPT-Da-Nang-cap2-h-i-ng-ko-bt-code";
+
+const EXCLUDED_REPOS = [
+  "BillyDrive",
+  "WebCreatePathing",
+];
+
+function ProgrammePage() {
+  const [repos, setRepos] = useState<GitHubRepo[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(
+      `https://api.github.com/orgs/${GITHUB_ORG}/repos?per_page=100&sort=updated`
+    )
+      .then((res) => res.json())
+      .then((data) => {
+        const filtered = data.filter(
+          (repo: GitHubRepo) =>
+            !EXCLUDED_REPOS.includes(repo.name)
+        );
+
+        setRepos(filtered);
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error("GitHub API error:", error);
+        setLoading(false);
+      });
+  }, []);
+
+  return (
+    <section className="resource-page">
+      <div className="resource-page-header">
+        <p className="section-label">
+          RESOURCES · PROGRAMMING
+        </p>
+
+        <h1>
+          PROGRAMMING
+          <br />
+          <span>RESOURCES.</span>
+        </h1>
+
+        <p>
+          Source code, programming techniques and
+          tools developed by FPT PT Robotics.
+        </p>
+      </div>
+
+      {loading ? (
+        <div className="resource-status">
+          LOADING REPOSITORIES...
+        </div>
+      ) : repos.length === 0 ? (
+        <div className="resource-status">
+          <h2>MORE COMING SOON.</h2>
+          <p>
+            Programming resources will be shared here
+            as our teams publish new repositories.
+          </p>
+        </div>
+      ) : (
+        <div className="resource-grid">
+          {repos.map((repo) => (
+            <a
+              key={repo.name}
+              href={repo.html_url}
+              target="_blank"
+              rel="noreferrer"
+              className="resource-card"
+            >
+              <div className="resource-card-top">
+                <span>
+                  {repo.language || "SOURCE CODE"}
+                </span>
+
+                <span>
+                  ★ {repo.stargazers_count}
+                </span>
+              </div>
+
+              <h2>{repo.name}</h2>
+
+              <p>
+                {repo.description ||
+                  "Open-source programming resource from FPT PT Robotics."}
+              </p>
+
+              <span className="resource-link">
+                VIEW SOURCE →
+              </span>
+            </a>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+
+function MechanicalPage() {
+  return (
+    <section className="resource-page">
+      <div className="resource-page-header">
+        <p className="section-label">
+          RESOURCES · MECHANICAL
+        </p>
+
+        <h1>
+          MECHANICAL
+          <br />
+          <span>RESOURCES.</span>
+        </h1>
+
+        <p>
+          Mechanical designs, CAD files, engineering
+          documentation and robot build resources.
+        </p>
+      </div>
+
+      <div className="resource-status">
+        <h2>COMING SOON.</h2>
+
+        <p>
+          Our mechanical resources will be shared here.
+        </p>
+      </div>
+    </section>
+  );
+}
+
 function App() {
+  const [resourcePage, setResourcePage] = useState<
+    "main" | "programme" | "mechanical"
+  >("main");
+
+  useEffect(() => {
+    const handleHash = () => {
+      if (window.location.hash === "#resources/programme") {
+        setResourcePage("programme");
+      } else if (window.location.hash === "#resources/mechanical") {
+        setResourcePage("mechanical");
+      } else {
+        setResourcePage("main");
+      }
+    };
+
+    handleHash();
+
+    window.addEventListener("hashchange", handleHash);
+
+    return () => {
+      window.removeEventListener("hashchange", handleHash);
+    };
+  }, []);
+
+  if (resourcePage === "programme") {
+    return (
+      <div className="site">
+        <header className="navbar">
+          <div className="nav-logo">
+            <span>FPT</span>
+            <strong>ROBOTICS</strong>
+          </div>
+
+          <nav>
+            <a href="#home">Home</a>
+            <a href="#teams">Teams</a>
+            <a href="#achievements">Achievements</a>
+            <a href="#gallery">Gallery</a>
+
+            <div className="resource-dropdown">
+              <button>Resources ▾</button>
+
+              <div className="resource-menu">
+                <a href="#resources/mechanical">
+                  Mechanical
+                </a>
+
+                <a href="#resources/programme">
+                  Programme
+                </a>
+              </div>
+            </div>
+          </nav>
+
+          <a className="nav-button" href="#teams">
+            Meet the Teams
+          </a>
+        </header>
+
+        <ProgrammePage />
+      </div>
+    );
+  }
+
+  if (resourcePage === "mechanical") {
+    return (
+      <div className="site">
+        <header className="navbar">
+          <div className="nav-logo">
+            <span>FPT</span>
+            <strong>ROBOTICS</strong>
+          </div>
+
+          <nav>
+            <a href="#home">Home</a>
+            <a href="#teams">Teams</a>
+            <a href="#achievements">Achievements</a>
+            <a href="#gallery">Gallery</a>
+
+            <div className="resource-dropdown">
+              <button>Resources ▾</button>
+
+              <div className="resource-menu">
+                <a href="#resources/mechanical">
+                  Mechanical
+                </a>
+
+                <a href="#resources/programme">
+                  Programme
+                </a>
+              </div>
+            </div>
+          </nav>
+
+          <a className="nav-button" href="#teams">
+            Meet the Teams
+          </a>
+        </header>
+
+        <MechanicalPage />
+      </div>
+    );
+  }
+
   return (
     <div className="site">
 
@@ -24,6 +270,20 @@ function App() {
           <a href="#teams">Teams</a>
           <a href="#achievements">Achievements</a>
           <a href="#gallery">Gallery</a>
+
+          <div className="resource-dropdown">
+            <button>Resources ▾</button>
+
+            <div className="resource-menu">
+              <a href="#resources/mechanical">
+                Mechanical
+              </a>
+
+              <a href="#resources/programme">
+                Programme
+              </a>
+            </div>
+          </div>
         </nav>
 
         <a className="nav-button" href="#teams">
